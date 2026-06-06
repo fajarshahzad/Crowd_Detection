@@ -9,7 +9,7 @@ Welcome to **CrowdSight AI**, a premium, state-of-the-art computer vision platfo
 The dataset images used in this project (filenames starting with prefixes `273271-` and `273275-`) are sourced from **CrowdHuman**, a benchmark dataset for detecting humans in crowded and heavily occluded scenes.
 
 - **Official CrowdHuman Project Page**: [CrowdHuman Website](https://www.crowdhuman.org/)
-- **Roboflow Universe Crowd Counting Datasets**: [Roboflow Universe](https://universe.roboflow.com/search?q=crowd+counting)
+- **Crowd Counting Datasets**: https://www.kaggle.com/datasets/permanalwep/crowdhuman-crowd-detection
 
 ---
 
