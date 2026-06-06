@@ -16,30 +16,14 @@ The dataset images used in this project (filenames starting with prefixes `27327
 ## ⚙️ Installation & Setup (Step-by-Step)
 
 Follow these steps to set up and run the project locally on your system:
-
-### Step 1: Clone the Repository
-Open your terminal and navigate to the project directory:
-```bash
-cd c:/Users/Qureshi/Desktop/Semester 6/CV/Final_Project
 ```
-
-### Step 2: Set Up Virtual Environment (Recommended)
-Initialize and activate a Python virtual environment to keep dependencies isolated:
-```bash
-# Create environment
-python -m venv venv
-
-# Activate on Windows
-venv\Scripts\activate
-```
-
-### Step 3: Install Required Dependencies
+### Step 1: Install Required Dependencies
 Install the necessary deep learning and web interface packages:
 ```bash
 pip install streamlit ultralytics opencv-python numpy pillow
 ```
 
-### Step 4: Verify Dataset Directory Structure
+### Step 2: Verify Dataset Directory Structure
 Ensure your datasets are placed in the correct directories:
 ```
 Final_Project/
@@ -48,7 +32,7 @@ Final_Project/
 │   └── labels/       <- Place corresponding YOLO label text (.txt) here
 ```
 
-### Step 5: Start the Platform
+### Step 3: Start the Platform
 Launch the Streamlit web dashboard:
 ```bash
 streamlit run src/app.py
