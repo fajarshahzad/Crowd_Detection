@@ -16,7 +16,6 @@ The dataset images used in this project (filenames starting with prefixes `27327
 ## ⚙️ Installation & Setup (Step-by-Step)
 
 Follow these steps to set up and run the project locally on your system:
-```
 ### Step 1: Install Required Dependencies
 Install the necessary deep learning and web interface packages:
 ```bash
