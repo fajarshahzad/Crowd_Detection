@@ -1,0 +1,616 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>CrowdSight AI - Custom Canvas Annotator</title>
+  <style>
+    :root {
+      --bg-color: #161b22;
+      --card-bg: #0d1117;
+      --text-color: #c9d1d9;
+      --border-color: #30363d;
+      --accent-color: #58a6ff;
+      --accent-hover: #1f6feb;
+      --danger-color: #f85149;
+    }
+    
+    body {
+      margin: 0;
+      padding: 10px;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+      background-color: transparent;
+      color: var(--text-color);
+      overflow-x: hidden;
+    }
+    
+    .annotator-container {
+      display: grid;
+      grid-template-columns: 1fr 280px;
+      gap: 15px;
+      background: var(--card-bg);
+      border: 1px solid var(--border-color);
+      border-radius: 12px;
+      padding: 15px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+    }
+    
+    .canvas-wrapper {
+      position: relative;
+      background: #000;
+      border-radius: 8px;
+      overflow: hidden;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      border: 1px solid var(--border-color);
+      min-height: 450px;
+    }
+    
+    canvas {
+      display: block;
+      cursor: crosshair;
+    }
+    
+    .control-panel {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      border-left: 1px solid var(--border-color);
+      padding-left: 15px;
+    }
+    
+    h3 {
+      margin: 0 0 10px 0;
+      font-size: 1.1rem;
+      font-weight: 600;
+      color: #fff;
+      border-bottom: 1px solid var(--border-color);
+      padding-bottom: 8px;
+    }
+    
+    .label-input-group {
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+    }
+    
+    label {
+      font-size: 0.85rem;
+      color: #8b949e;
+      font-weight: 500;
+    }
+    
+    input[type="text"], select {
+      background: #21262d;
+      border: 1px solid var(--border-color);
+      border-radius: 6px;
+      color: #fff;
+      padding: 8px;
+      font-size: 0.9rem;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+    
+    input[type="text"]:focus, select:focus {
+      border-color: var(--accent-color);
+    }
+    
+    .btn-group {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+    }
+    
+    .btn {
+      background: #21262d;
+      color: #fff;
+      border: 1px solid var(--border-color);
+      border-radius: 6px;
+      padding: 8px 12px;
+      font-size: 0.85rem;
+      font-weight: 500;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 5px;
+      transition: background 0.2s, border-color 0.2s;
+    }
+    
+    .btn:hover {
+      background: #30363d;
+      border-color: #8b949e;
+    }
+    
+    .btn.active {
+      background: rgba(88, 166, 255, 0.15);
+      border-color: var(--accent-color);
+      color: var(--accent-color);
+    }
+    
+    .btn.primary {
+      background: var(--accent-color);
+      border-color: var(--accent-color);
+      color: #fff;
+    }
+    
+    .btn.primary:hover {
+      background: var(--accent-hover);
+    }
+    
+    .btn.danger {
+      color: var(--danger-color);
+      border-color: rgba(248, 81, 73, 0.4);
+    }
+    
+    .btn.danger:hover {
+      background: rgba(248, 81, 73, 0.1);
+      border-color: var(--danger-color);
+    }
+    
+    .btn.full-width {
+      grid-column: span 2;
+    }
+    
+    .annotation-list {
+      flex-grow: 1;
+      overflow-y: auto;
+      max-height: 200px;
+      border: 1px solid var(--border-color);
+      border-radius: 6px;
+      background: #161b22;
+      padding: 5px;
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+    }
+    
+    .annotation-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 6px 8px;
+      background: #21262d;
+      border: 1px solid var(--border-color);
+      border-radius: 4px;
+      font-size: 0.8rem;
+    }
+    
+    .annotation-item .badge {
+      font-size: 0.7rem;
+      padding: 2px 4px;
+      border-radius: 3px;
+      background: rgba(88, 166, 255, 0.2);
+      color: var(--accent-color);
+      margin-left: 5px;
+    }
+    
+    .delete-btn {
+      background: transparent;
+      border: none;
+      color: #8b949e;
+      cursor: pointer;
+      font-size: 1rem;
+      padding: 0 4px;
+    }
+    
+    .delete-btn:hover {
+      color: var(--danger-color);
+    }
+    
+    .poly-tip {
+      font-size: 0.75rem;
+      color: #8b949e;
+      margin: 2px 0;
+      line-height: 1.3;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="annotator-container">
+    <div class="canvas-wrapper" id="canvas-wrapper">
+      <canvas id="canvas"></canvas>
+    </div>
+    
+    <div class="control-panel">
+      <h3>Drawing Controls</h3>
+      
+      <div class="label-input-group">
+        <label for="label-select">Category Label</label>
+        <input type="text" id="label-select" value="person" placeholder="person, car, etc.">
+      </div>
+      
+      <div class="label-input-group">
+        <label>Drawing Tool</label>
+        <div class="btn-group">
+          <button class="btn active" id="tool-bbox">Bounding Box</button>
+          <button class="btn" id="tool-polygon">Polygon Mask</button>
+        </div>
+      </div>
+      
+      <div class="poly-tip" id="polygon-help" style="display:none;">
+        💡 Click to add vertices. Double-click or click first point to close polygon mask.
+      </div>
+      
+      <div class="btn-group">
+        <button class="btn" id="btn-undo">Undo Shape</button>
+        <button class="btn" id="btn-close-poly" style="display:none;">Close Poly</button>
+        <button class="btn danger full-width" id="btn-clear">Clear All</button>
+      </div>
+      
+      <h3>Annotations (<span id="count-span">0</span>)</h3>
+      <div class="annotation-list" id="ann-list">
+        <!-- Annotation items injected here -->
+      </div>
+      
+      <button class="btn primary full-width" id="btn-confirm">✓ Confirm Annotations</button>
+    </div>
+  </div>
+
+  <script>
+    // Streamlit Component Protocol
+    function sendMessage(type, data) {
+      const message = {
+        isStreamlitMessage: true,
+        type: type,
+        ...data
+      };
+      window.parent.postMessage(message, "*");
+    }
+
+    // Canvas & State Setup
+    const canvas = document.getElementById("canvas");
+    const ctx = canvas.getContext("2d");
+    const wrapper = document.getElementById("canvas-wrapper");
+    
+    let img = new Image();
+    let imageLoaded = false;
+    let annotations = [];
+    let currentTool = "bbox"; // 'bbox' or 'polygon'
+    
+    // Polygon drawing state
+    let activePolygonPoints = [];
+    
+    // Bbox drawing state
+    let drawingBbox = false;
+    let bboxStart = { x: 0, y: 0 };
+    let bboxEnd = { x: 0, y: 0 };
+    
+    // Colors
+    const colors = ["#28a745", "#58a6ff", "#f85149", "#ffc107", "#ff007f", "#7f00ff"];
+    
+    // Label input
+    const labelInput = document.getElementById("label-select");
+    
+    // Streamlit render notification
+    window.addEventListener("message", function(event) {
+      if (event.data.type === "streamlit:render") {
+        const args = event.data.args;
+        if (args.imageUrl && args.imageUrl !== img.src) {
+          imageLoaded = false;
+          img.src = args.imageUrl;
+          annotations = args.existing_annotations || [];
+          activePolygonPoints = [];
+          drawingBbox = false;
+        }
+      }
+    });
+    
+    img.onload = function() {
+      imageLoaded = true;
+      resizeCanvas();
+      draw();
+      updateAnnotationList();
+      
+      // Inform Streamlit about the height
+      setTimeout(() => {
+        const height = document.body.scrollHeight + 30;
+        sendMessage("streamlit:setFrameHeight", { height: height });
+      }, 100);
+    };
+    
+    function resizeCanvas() {
+      if (!imageLoaded) return;
+      const maxW = wrapper.clientWidth;
+      const maxH = 500;
+      
+      let w = img.width;
+      let h = img.height;
+      
+      // Scaling calculations
+      const scale = Math.min(maxW / w, maxH / h);
+      canvas.width = w * scale;
+      canvas.height = h * scale;
+    }
+    
+    window.onresize = function() {
+      resizeCanvas();
+      draw();
+    };
+    
+    // Mouse Event Handlers
+    canvas.addEventListener("mousedown", function(e) {
+      if (!imageLoaded) return;
+      const rect = canvas.getBoundingClientRect();
+      const x = e.clientX - rect.left;
+      const y = e.clientY - rect.top;
+      
+      if (currentTool === "bbox") {
+        drawingBbox = true;
+        bboxStart = { x, y };
+        bboxEnd = { x, y };
+      } else if (currentTool === "polygon") {
+        // Check if click is near start point to close polygon
+        if (activePolygonPoints.length > 2) {
+          const first = activePolygonPoints[0];
+          const dist = Math.hypot(first.x * canvas.width - x, first.y * canvas.height - y);
+          if (dist < 10) {
+            closePolygon();
+            return;
+          }
+        }
+        activePolygonPoints.push({
+          x: x / canvas.width,
+          y: y / canvas.height
+        });
+        draw();
+      }
+    });
+    
+    canvas.addEventListener("mousemove", function(e) {
+      if (!imageLoaded) return;
+      const rect = canvas.getBoundingClientRect();
+      const x = e.clientX - rect.left;
+      const y = e.clientY - rect.top;
+      
+      if (drawingBbox) {
+        bboxEnd = { x, y };
+        draw();
+      }
+    });
+    
+    canvas.addEventListener("mouseup", function(e) {
+      if (!imageLoaded) return;
+      if (drawingBbox) {
+        drawingBbox = false;
+        
+        const xMin = Math.min(bboxStart.x, bboxEnd.x) / canvas.width;
+        const yMin = Math.min(bboxStart.y, bboxEnd.y) / canvas.height;
+        const w = Math.abs(bboxStart.x - bboxEnd.x) / canvas.width;
+        const h = Math.abs(bboxStart.y - bboxEnd.y) / canvas.height;
+        
+        // Add if shape is valid (size > 1% of canvas width)
+        if (w > 0.01 && h > 0.01) {
+          annotations.push({
+            type: "bbox",
+            label: labelInput.value.trim() || "person",
+            x: xMin,
+            y: yMin,
+            w: w,
+            h: h
+          });
+          updateAnnotationList();
+          reportValue();
+        }
+        draw();
+      }
+    });
+    
+    // Double click closes polygon
+    canvas.addEventListener("dblclick", function(e) {
+      if (currentTool === "polygon" && activePolygonPoints.length > 2) {
+        closePolygon();
+      }
+    });
+    
+    function closePolygon() {
+      if (activePolygonPoints.length > 2) {
+        annotations.push({
+          type: "polygon",
+          label: labelInput.value.trim() || "person",
+          points: [...activePolygonPoints]
+        });
+        activePolygonPoints = [];
+        updateAnnotationList();
+        reportValue();
+        draw();
+      }
+    }
+    
+    // Draw canvas function
+    function draw() {
+      if (!imageLoaded) return;
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+      
+      // Draw finalized annotations
+      annotations.forEach((ann, idx) => {
+        const color = getColor(ann.label);
+        
+        if (ann.type === "bbox") {
+          const x = ann.x * canvas.width;
+          const y = ann.y * canvas.height;
+          const w = ann.w * canvas.width;
+          const h = ann.h * canvas.height;
+          
+          ctx.strokeStyle = color;
+          ctx.lineWidth = 2;
+          ctx.setLineDash([]);
+          ctx.strokeRect(x, y, w, h);
+          
+          ctx.fillStyle = color;
+          ctx.font = "12px sans-serif";
+          ctx.fillText(ann.label, x + 4, y + 14);
+        } else if (ann.type === "polygon") {
+          ctx.fillStyle = color + "4D"; // 30% opacity
+          ctx.strokeStyle = color;
+          ctx.lineWidth = 2;
+          ctx.setLineDash([]);
+          
+          ctx.beginPath();
+          ann.points.forEach((pt, pIdx) => {
+            const px = pt.x * canvas.width;
+            const py = pt.y * canvas.height;
+            if (pIdx === 0) ctx.moveTo(px, py);
+            else ctx.lineTo(px, py);
+          });
+          ctx.closePath();
+          ctx.fill();
+          ctx.stroke();
+          
+          // Label at first point
+          if (ann.points.length > 0) {
+            ctx.fillStyle = color;
+            ctx.font = "12px sans-serif";
+            ctx.fillText(ann.label, ann.points[0].x * canvas.width + 4, ann.points[0].y * canvas.height - 4);
+          }
+        }
+      });
+      
+      // Draw active drawing shape
+      if (drawingBbox) {
+        ctx.strokeStyle = "#ffffff";
+        ctx.lineWidth = 1.5;
+        ctx.setLineDash([5, 5]);
+        ctx.strokeRect(
+          bboxStart.x,
+          bboxStart.y,
+          bboxEnd.x - bboxStart.x,
+          bboxEnd.y - bboxStart.y
+        );
+      }
+      
+      if (currentTool === "polygon" && activePolygonPoints.length > 0) {
+        ctx.strokeStyle = "#ffffff";
+        ctx.lineWidth = 1.5;
+        ctx.setLineDash([3, 3]);
+        ctx.beginPath();
+        activePolygonPoints.forEach((pt, idx) => {
+          const px = pt.x * canvas.width;
+          const py = pt.y * canvas.height;
+          if (idx === 0) ctx.moveTo(px, py);
+          else ctx.lineTo(px, py);
+          
+          // Draw circle handles at points
+          ctx.fillStyle = "#ffffff";
+          ctx.beginPath();
+          ctx.arc(px, py, 4, 0, 2 * Math.PI);
+          ctx.fill();
+        });
+        
+        // Return draw path
+        ctx.beginPath();
+        activePolygonPoints.forEach((pt, idx) => {
+          const px = pt.x * canvas.width;
+          const py = pt.y * canvas.height;
+          if (idx === 0) ctx.moveTo(px, py);
+          else ctx.lineTo(px, py);
+        });
+        ctx.stroke();
+      }
+    }
+    
+    function getColor(label) {
+      let hash = 0;
+      for (let i = 0; i < label.length; i++) {
+        hash = label.charCodeAt(i) + ((hash << 5) - hash);
+      }
+      return colors[Math.abs(hash) % colors.length];
+    }
+    
+    // UI Event Handlers
+    const toolBbox = document.getElementById("tool-bbox");
+    const toolPoly = document.getElementById("tool-polygon");
+    const polyHelp = document.getElementById("polygon-help");
+    const btnClosePoly = document.getElementById("btn-close-poly");
+    
+    toolBbox.onclick = function() {
+      currentTool = "bbox";
+      toolBbox.classList.add("active");
+      toolPoly.classList.remove("active");
+      polyHelp.style.display = "none";
+      btnClosePoly.style.display = "none";
+      activePolygonPoints = [];
+      draw();
+    };
+    
+    toolPoly.onclick = function() {
+      currentTool = "polygon";
+      toolPoly.classList.add("active");
+      toolBbox.classList.remove("active");
+      polyHelp.style.display = "block";
+      btnClosePoly.style.display = "block";
+      draw();
+    };
+    
+    document.getElementById("btn-undo").onclick = function() {
+      if (currentTool === "polygon" && activePolygonPoints.length > 0) {
+        activePolygonPoints.pop();
+      } else {
+        annotations.pop();
+        updateAnnotationList();
+        reportValue();
+      }
+      draw();
+    };
+    
+    btnClosePoly.onclick = function() {
+      closePolygon();
+    };
+    
+    document.getElementById("btn-clear").onclick = function() {
+      annotations = [];
+      activePolygonPoints = [];
+      drawingBbox = false;
+      updateAnnotationList();
+      reportValue();
+      draw();
+    };
+    
+    document.getElementById("btn-confirm").onclick = function() {
+      reportValue();
+      alert("Annotations confirmed in UI! Click 'Save Annotation' on the Streamlit interface to export them.");
+    };
+    
+    function deleteAnnotation(idx) {
+      annotations.splice(idx, 1);
+      updateAnnotationList();
+      reportValue();
+      draw();
+    }
+    
+    function updateAnnotationList() {
+      const list = document.getElementById("ann-list");
+      list.innerHTML = "";
+      document.getElementById("count-span").innerText = annotations.length;
+      
+      annotations.forEach((ann, idx) => {
+        const item = document.createElement("div");
+        item.className = "annotation-item";
+        
+        const labelText = document.createElement("span");
+        labelText.innerHTML = `<strong>${ann.label}</strong> <span class="badge">${ann.type}</span>`;
+        
+        const delBtn = document.createElement("button");
+        delBtn.className = "delete-btn";
+        delBtn.innerHTML = "×";
+        delBtn.onclick = function() {
+          deleteAnnotation(idx);
+        };
+        
+        item.appendChild(labelText);
+        item.appendChild(delBtn);
+        list.appendChild(item);
+      });
+    }
+    
+    function reportValue() {
+      sendMessage("streamlit:setComponentValue", { value: annotations });
+    }
+    
+    // Register component ready with Streamlit
+    sendMessage("streamlit:componentReady", { apiVersion: 1 });
+  </script>
+</body>
+</html>
