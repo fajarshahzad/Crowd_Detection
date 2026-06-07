@@ -17,7 +17,7 @@ from src.annotation.export import save_annotation_data
 # Page configuration
 st.set_page_config(
     page_title="CrowdSight AI - Dashboard",
-    page_icon="👥",
+    page_icon="CS",
     layout="wide",
     initial_sidebar_state="expanded"
 )
@@ -42,87 +42,308 @@ pipeline = get_pipeline(
 
 # Sidebar configurations
 with st.sidebar:
-    st.markdown("<h2 style='text-align: center; color: #4e4376;'>👥 CrowdSight AI</h2>", unsafe_allow_html=True)
-    st.markdown("<p style='text-align: center; font-size: 0.9rem; color: #6c757d;'>Computer Vision Final Project Platform</p>", unsafe_allow_html=True)
-    st.markdown("---")
+    st.markdown(
+        """
+        <div class="sidebar-brand">
+            <div class="brand-mark">CS</div>
+            <div>
+                <h2>CrowdSight AI</h2>
+                <p>Computer vision workspace</p>
+            </div>
+        </div>
+        """,
+        unsafe_allow_html=True
+    )
     
     menu = st.radio(
-        "Navigation Hub",
+        "Workspace",
         [
-            "📊 Dashboard Overview",
-            "✏️ Image Annotator",
-            "🎯 Pedestrian Detection",
-            "📈 Crowd Classification",
-            "🎭 Instance Segmentation"
+            "Dashboard",
+            "Image Annotator",
+            "Pedestrian Detection",
+            "Crowd Classification",
+            "Instance Segmentation"
         ]
     )
     st.markdown("---")
-    st.markdown("### System Configuration")
+    st.markdown("### Preferences")
+    theme_choice = st.selectbox("Theme", ["Dark", "Light"], index=0)
+    st.markdown("### System")
     device_opt = st.selectbox("Device", ["CPU", "GPU (CUDA)"])
 
-# Inject Custom Light-Theme CSS Stylesheet
-st.markdown("""
+theme = {
+    "Dark": {
+        "bg": "#0b1020",
+        "bg_soft": "#111827",
+        "panel": "#151c2e",
+        "panel_alt": "#0f172a",
+        "text": "#f8fafc",
+        "muted": "#94a3b8",
+        "border": "rgba(148, 163, 184, 0.18)",
+        "accent": "#38bdf8",
+        "accent_2": "#22c55e",
+        "shadow": "rgba(2, 6, 23, 0.42)",
+        "input": "#0f172a",
+    },
+    "Light": {
+        "bg": "#f6f8fb",
+        "bg_soft": "#edf2f7",
+        "panel": "#ffffff",
+        "panel_alt": "#f8fafc",
+        "text": "#111827",
+        "muted": "#64748b",
+        "border": "rgba(15, 23, 42, 0.10)",
+        "accent": "#0284c7",
+        "accent_2": "#16a34a",
+        "shadow": "rgba(15, 23, 42, 0.10)",
+        "input": "#ffffff",
+    },
+}[theme_choice]
+
+# Inject modern theme-aware CSS stylesheet.
+theme_css = """
 <style>
+    :root {{
+        --cs-bg: %%BG%%;
+        --cs-bg-soft: %%BG_SOFT%%;
+        --cs-panel: %%PANEL%%;
+        --cs-panel-alt: %%PANEL_ALT%%;
+        --cs-text: %%TEXT%%;
+        --cs-muted: %%MUTED%%;
+        --cs-border: %%BORDER%%;
+        --cs-accent: %%ACCENT%%;
+        --cs-accent-2: %%ACCENT_2%%;
+        --cs-shadow: %%SHADOW%%;
+        --cs-input: %%INPUT%%;
+    }}
+
     .stApp {
-        background-color: #f8f9fa !important;
-        color: #212529 !important;
+        background:
+            radial-gradient(circle at top left, color-mix(in srgb, var(--cs-accent) 18%, transparent), transparent 32rem),
+            linear-gradient(180deg, var(--cs-bg) 0%, var(--cs-bg-soft) 100%) !important;
+        color: var(--cs-text) !important;
+        font-family: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
     }
-    .header-card {
-        background: linear-gradient(135deg, #2b5876 0%, #4e4376 100%);
-        border-radius: 12px;
-        padding: 2.5rem;
-        margin-bottom: 2rem;
-        box-shadow: 0 4px 20px rgba(0,0,0,0.1);
-        border: 1px solid rgba(0,0,0,0.05);
-        text-align: center;
+
+    .block-container {
+        padding-top: 2rem;
+        padding-bottom: 3rem;
+        max-width: 1240px;
     }
-    .header-card h1 { color: #ffffff !important; margin: 0; }
-    .header-card p { color: #e9ecef !important; margin-top: 10px; }
+
+    [data-testid="stSidebar"] {
+        background: var(--cs-panel) !important;
+        border-right: 1px solid var(--cs-border);
+        box-shadow: 10px 0 30px var(--cs-shadow);
+    }
+
+    [data-testid="stSidebar"] * {
+        color: var(--cs-text) !important;
+    }
+
+    .sidebar-brand {
+        display: flex;
+        align-items: center;
+        gap: 0.9rem;
+        padding: 0.35rem 0 1.1rem;
+    }
+
+    .brand-mark {
+        width: 42px;
+        height: 42px;
+        border-radius: 8px;
+        display: grid;
+        place-items: center;
+        background: linear-gradient(135deg, var(--cs-accent), var(--cs-accent-2));
+        color: #fff !important;
+        font-weight: 800;
+        letter-spacing: 0;
+        box-shadow: 0 10px 24px color-mix(in srgb, var(--cs-accent) 34%, transparent);
+    }
+
+    .sidebar-brand h2 {
+        margin: 0;
+        font-size: 1.08rem;
+        line-height: 1.1;
+    }
+
+    .sidebar-brand p {
+        margin: 0.22rem 0 0;
+        color: var(--cs-muted) !important;
+        font-size: 0.82rem;
+    }
+
+    .hero-card {
+        background:
+            linear-gradient(135deg, color-mix(in srgb, var(--cs-accent) 20%, var(--cs-panel)), var(--cs-panel) 58%),
+            var(--cs-panel);
+        border-radius: 8px;
+        padding: 2rem;
+        margin-bottom: 1.6rem;
+        box-shadow: 0 22px 70px var(--cs-shadow);
+        border: 1px solid var(--cs-border);
+        position: relative;
+        overflow: hidden;
+    }
+
+    .hero-card:after {
+        content: "";
+        position: absolute;
+        inset: auto -8rem -9rem auto;
+        width: 19rem;
+        height: 19rem;
+        border-radius: 50%;
+        background: color-mix(in srgb, var(--cs-accent-2) 16%, transparent);
+    }
+
+    .hero-kicker {
+        margin: 0 0 0.65rem;
+        color: var(--cs-accent) !important;
+        font-size: 0.78rem;
+        font-weight: 800;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+    }
+
+    .hero-card h1 {
+        color: var(--cs-text) !important;
+        font-size: clamp(2rem, 4vw, 3.7rem);
+        line-height: 1;
+        margin: 0;
+        letter-spacing: 0;
+        max-width: 800px;
+    }
+
+    .hero-card p {
+        color: var(--cs-muted) !important;
+        margin: 1rem 0 0;
+        max-width: 720px;
+        font-size: 1.02rem;
+        line-height: 1.65;
+    }
     
     .stat-card {
-        background: #ffffff;
-        border-radius: 10px;
-        padding: 1.5rem;
-        border: 1px solid #dee2e6;
-        text-align: center;
-        box-shadow: 0 2px 8px rgba(0,0,0,0.05);
-        transition: transform 0.2s, box-shadow 0.2s;
+        background: color-mix(in srgb, var(--cs-panel) 94%, transparent);
+        border-radius: 8px;
+        padding: 1.35rem;
+        border: 1px solid var(--cs-border);
+        box-shadow: 0 16px 36px var(--cs-shadow);
+        transition: transform 0.18s ease, border-color 0.18s ease;
         margin-bottom: 1.5rem;
     }
     .stat-card:hover {
-        transform: translateY(-5px);
-        box-shadow: 0 4px 15px rgba(0,0,0,0.1);
-        border-color: #ced4da;
+        transform: translateY(-2px);
+        border-color: color-mix(in srgb, var(--cs-accent) 55%, var(--cs-border));
     }
     .stat-value {
-        font-size: 2.2rem;
+        font-size: 2rem;
         font-weight: 800;
-        color: #4e4376;
+        color: var(--cs-text);
         margin-bottom: 0.2rem;
+        letter-spacing: 0;
     }
     .stat-label {
-        font-size: 0.9rem;
-        color: #6c757d;
+        font-size: 0.78rem;
+        color: var(--cs-muted);
         text-transform: uppercase;
-        letter-spacing: 0.5px;
+        letter-spacing: 0.06em;
+    }
+
+    .workflow-card {
+        background: var(--cs-panel);
+        border: 1px solid var(--cs-border);
+        border-radius: 8px;
+        padding: 1.25rem;
+        box-shadow: 0 16px 36px var(--cs-shadow);
+        min-height: 100%;
     }
     h1, h2, h3, h4, h5, h6, p, li, span, label {
-        color: #212529 !important;
+        color: var(--cs-text) !important;
+        letter-spacing: 0;
+    }
+
+    [data-testid="stMarkdownContainer"] p,
+    [data-testid="stMarkdownContainer"] li {
+        color: var(--cs-muted) !important;
+    }
+
+    div[data-testid="stFileUploader"],
+    div[data-testid="stCodeBlock"],
+    div[data-testid="stAlert"],
+    .stDataFrame,
+    [data-testid="stImage"] {
+        border-radius: 8px !important;
+    }
+
+    .stTextInput input,
+    .stSelectbox div[data-baseweb="select"] > div,
+    .stNumberInput input {
+        background: var(--cs-input) !important;
+        color: var(--cs-text) !important;
+        border-color: var(--cs-border) !important;
+        border-radius: 8px !important;
+    }
+
+    .stRadio [role="radiogroup"] {
+        gap: 0.35rem;
+    }
+
+    .stRadio [role="radio"] {
+        background: transparent;
+        border-radius: 8px;
+        padding: 0.58rem 0.7rem;
+    }
+
+    .stRadio [aria-checked="true"] {
+        background: color-mix(in srgb, var(--cs-accent) 15%, transparent);
+        border: 1px solid color-mix(in srgb, var(--cs-accent) 38%, transparent);
     }
     .stButton>button {
-        background-color: #ffffff !important;
-        color: #495057 !important;
-        border: 1px solid #ced4da !important;
-        border-radius: 6px !important;
-        transition: all 0.2s !important;
+        background: var(--cs-panel) !important;
+        color: var(--cs-text) !important;
+        border: 1px solid var(--cs-border) !important;
+        border-radius: 8px !important;
+        transition: all 0.18s ease !important;
+        box-shadow: 0 10px 24px var(--cs-shadow);
     }
     .stButton>button:hover {
-        background-color: #e9ecef !important;
-        border-color: #adb5bd !important;
-        color: #212529 !important;
+        border-color: var(--cs-accent) !important;
+        transform: translateY(-1px);
+    }
+
+    .stButton>button[kind="primary"] {
+        background: linear-gradient(135deg, var(--cs-accent), var(--cs-accent-2)) !important;
+        border-color: transparent !important;
+        color: #fff !important;
+    }
+
+    hr {
+        border-color: var(--cs-border) !important;
+    }
+
+    @media (max-width: 900px) {
+        .hero-card {
+            padding: 1.4rem;
+        }
     }
 </style>
-""", unsafe_allow_html=True)
+"""
+for token, value in {
+    "%%BG%%": theme["bg"],
+    "%%BG_SOFT%%": theme["bg_soft"],
+    "%%PANEL%%": theme["panel"],
+    "%%PANEL_ALT%%": theme["panel_alt"],
+    "%%TEXT%%": theme["text"],
+    "%%MUTED%%": theme["muted"],
+    "%%BORDER%%": theme["border"],
+    "%%ACCENT%%": theme["accent"],
+    "%%ACCENT_2%%": theme["accent_2"],
+    "%%SHADOW%%": theme["shadow"],
+    "%%INPUT%%": theme["input"],
+}.items():
+    theme_css = theme_css.replace(token, value)
+theme_css = theme_css.replace("{{", "{").replace("}}", "}")
+st.markdown(theme_css, unsafe_allow_html=True)
 
 # Custom Common CSS for Alert banners
 st.markdown("""
@@ -144,15 +365,16 @@ processed_seg = PROJECT_ROOT / "Dataset" / "processed" / "segmentation" / "train
 
 # Header Card
 st.markdown(f"""
-<div class="header-card">
-    <h1>👥 CrowdSight AI Platform</h1>
-    <p>Premium Real-Time Crowd Counting, Density Classification, Bounding Box Annotation, and Instance Segmentation Platform</p>
+<div class="hero-card">
+    <p class="hero-kicker">Crowd analytics platform</p>
+    <h1>CrowdSight AI</h1>
+    <p>Real-time crowd counting, density classification, bounding-box annotation, and instance segmentation in one focused workspace.</p>
 </div>
 """, unsafe_allow_html=True)
 
 # ----------------- 1. DASHBOARD OVERVIEW -----------------
-if menu == "📊 Dashboard Overview":
-    st.subheader("📊 System Overview & Performance Metrics")
+if menu == "Dashboard":
+    st.subheader("System Overview")
     
     col1, col2, col3 = st.columns(3)
     num_raw = len(list(raw_img_path.iterdir())) if raw_img_path.exists() else 0
@@ -182,18 +404,18 @@ if menu == "📊 Dashboard Overview":
         </div>
         """, unsafe_allow_html=True)
         
-    st.markdown("### System Quick Start Dashboard")
+    st.markdown("### Workflow")
     col_a, col_b = st.columns(2)
     with col_a:
-        st.markdown("#### Platform Workflow")
+        st.markdown("#### Recommended Flow")
         st.markdown("""
-        1. **Annotate**: Upload and mask/box objects using the **✏️ Image Annotator** tab. Export annotations to YOLO, COCO, or COCO JSON formats.
+        1. **Annotate**: Upload images and draw bounding boxes or polygon masks.
         2. **Train**: Customize hyperparameters and run the training scripts in your local console.
-        3. **Inference**: Test pipeline results dynamically across Bounding Box or Instance Segmentation.
+        3. **Evaluate**: Test detection, classification, and segmentation results interactively.
         """)
         
     with col_b:
-        st.markdown("#### Database Quantity Visualizer")
+        st.markdown("#### Dataset Snapshot")
         chart_data = {
             "Raw Images": num_raw,
             "Detection Split": num_det_split,
@@ -202,9 +424,9 @@ if menu == "📊 Dashboard Overview":
         st.bar_chart(chart_data)
 
 # ----------------- 2. IMAGE ANNOTATOR -----------------
-elif menu == "✏️ Image Annotator":
-    st.subheader("✏️ Interactive Multi-Format Image Annotator")
-    st.info("Upload an image, draw Bounding Boxes or Polygon Masks, select the export format, and save annotations. The annotated image with overlay labels/masks will automatically be saved.")
+elif menu == "Image Annotator":
+    st.subheader("Image Annotator")
+    st.info("Upload an image, draw boxes or polygon masks, choose an export format, and save the finished annotations.")
     
     uploaded_file = st.file_uploader("Upload an image to annotate...", type=["jpg", "jpeg", "png", "bmp"])
     
@@ -224,7 +446,7 @@ elif menu == "✏️ Image Annotator":
         
         col1, col2 = st.columns(2)
         with col1:
-            st.markdown("### Export Directory Configurations")
+            st.markdown("### Export Settings")
             export_format = st.selectbox("Select Target Annotation Format", ["YOLO", "COCO", "COCO JSON"])
             
             save_to_raw = False
@@ -234,10 +456,10 @@ elif menu == "✏️ Image Annotator":
             img_filename = st.text_input("Name of image file:", value=uploaded_file.name)
             
         with col2:
-            st.markdown("### Save Annotations")
+            st.markdown("### Save")
             st.write(f"Active shapes drawn: **{len(drawn_anns) if drawn_anns else 0}**")
             
-            if st.button("💾 Save Annotation to Disk", type="primary", key="save_ann_btn"):
+            if st.button("Save Annotation", type="primary", key="save_ann_btn"):
                 if drawn_anns:
                     success, msg = save_annotation_data(
                         image_name=img_filename,
@@ -260,8 +482,8 @@ elif menu == "✏️ Image Annotator":
                     st.warning("Please draw at least one shape on the canvas and click 'Confirm' in the drawing board before saving.")
 
 # ----------------- 3. PEDESTRIAN DETECTION -----------------
-elif menu == "🎯 Pedestrian Detection":
-    st.subheader("🎯 Pedestrian Detection Module (YOLOv8)")
+elif menu == "Pedestrian Detection":
+    st.subheader("Pedestrian Detection")
     
     col_c1, col_c2 = st.columns(2)
     with col_c1:
@@ -285,15 +507,15 @@ elif menu == "🎯 Pedestrian Detection":
                 res = pipeline.process_image(img, mode="detect", conf=conf_det, iou=iou_det)
                 latency = (time.time() - start_time) * 1000
                 
-            st.image(res["annotated_image"], caption="Detected Persons Bounding Box", use_container_width=True)
+            st.image(res["annotated_image"], caption="Detected persons", use_container_width=True)
             st.markdown(f"""
-            - **Detected Persons**: {res['count']}
+            - **Detected people**: {res['count']}
             - **Detection Latency**: {latency:.1f} ms
             """)
             
     st.markdown("---")
-    st.markdown("### Console Training Command Generator")
-    st.write("Customize your hyperparameters below to generate the console training command:")
+    st.markdown("### Training Command")
+    st.write("Customize the hyperparameters below to generate a local training command.")
     
     col_t1, col_t2 = st.columns(2)
     with col_t1:
@@ -311,11 +533,11 @@ elif menu == "🎯 Pedestrian Detection":
     st.code(cmd_det, language="bash")
 
 # ----------------- 4. CROWD CLASSIFICATION -----------------
-elif menu == "📈 Crowd Classification":
-    st.subheader("📈 Crowd Density Classification Module")
+elif menu == "Crowd Classification":
+    st.subheader("Crowd Classification")
     
-    st.markdown("### Dynamic Crowd Threshold Configuration")
-    st.write("Configure the thresholds that classify density and trigger specific crowd-control warnings.")
+    st.markdown("### Density Thresholds")
+    st.write("Configure the thresholds used to classify density and trigger recommendations.")
     
     col1, col2, col3 = st.columns(3)
     with col1:
@@ -336,7 +558,7 @@ elif menu == "📈 Crowd Classification":
     with col_cc2:
         iou_class = st.slider("IoU (NMS) Threshold (Higher preserves overlapping people)", min_value=0.05, max_value=0.95, value=0.60, step=0.05, key="iou_class_slider")
 
-    st.markdown("### Live Classification Inference")
+    st.markdown("### Live Inference")
     uploaded_class_img = st.file_uploader("Upload an image...", type=["jpg", "jpeg", "png", "bmp"], key="class_img_upl")
     
     if uploaded_class_img is not None:
@@ -358,16 +580,16 @@ elif menu == "📈 Crowd Classification":
             <div class="alert-banner" style="background-color: {cls_res['hex_color']}22; color: {cls_res['hex_color']}; border-left-color: {cls_res['hex_color']};">
                 <h4 style="margin: 0; color: {cls_res['hex_color']} !important;">Crowd Level Status: {cls_res['level']}</h4>
                 <p style="margin: 0.5rem 0 0 0;"><b>Action Recommendation:</b> {cls_res['action']}</p>
-                <p style="margin: 0.2rem 0 0 0; font-size: 0.9rem; color: #8b949e;">{cls_res['description']}</p>
+                <p style="margin: 0.2rem 0 0 0; font-size: 0.9rem;">{cls_res['description']}</p>
             </div>
             """, unsafe_allow_html=True)
             
             st.markdown(f"""
-            - **Detected Persons**: {res['count']}
+            - **Detected people**: {res['count']}
             """)
             
             # Gauge chart visualization
-            st.markdown("#### Threshold Gauge Meter")
+            st.markdown("#### Threshold Meter")
             gauge_data = {
                 "Sparse Safe Limit": sparse_limit,
                 "Moderate Watch Limit": moderate_limit,
@@ -377,8 +599,8 @@ elif menu == "📈 Crowd Classification":
             st.bar_chart(gauge_data)
 
 # ----------------- 5. INSTANCE SEGMENTATION -----------------
-elif menu == "🎭 Instance Segmentation":
-    st.subheader("🎭 Instance Segmentation Module (YOLOv8-seg)")
+elif menu == "Instance Segmentation":
+    st.subheader("Instance Segmentation")
     
     col_cs1, col_cs2 = st.columns(2)
     with col_cs1:
@@ -402,15 +624,15 @@ elif menu == "🎭 Instance Segmentation":
                 res = pipeline.process_image(img, mode="segment", conf=conf_seg, iou=iou_seg)
                 latency = (time.time() - start_time) * 1000
                 
-            st.image(res["annotated_image"], caption="Segmented Person Masks", use_container_width=True)
+            st.image(res["annotated_image"], caption="Segmented person masks", use_container_width=True)
             st.markdown(f"""
-            - **Segmented Persons**: {res['count']}
+            - **Segmented people**: {res['count']}
             - **Segmentation Latency**: {latency:.1f} ms
             """)
             
     st.markdown("---")
-    st.markdown("### Console Training Command Generator")
-    st.write("Customize your hyperparameters below to generate the console training command:")
+    st.markdown("### Training Command")
+    st.write("Customize the hyperparameters below to generate a local training command.")
     
     col_s1, col_s2 = st.columns(2)
     with col_s1:
@@ -426,5 +648,6 @@ elif menu == "🎭 Instance Segmentation":
     
     st.write("Copy and run this command in your project terminal to train the segmentation model:")
     st.code(cmd_seg, language="bash")
+
 
 
