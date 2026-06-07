@@ -77,6 +77,7 @@ Dataset/images/
 Dataset/labels/
 Dataset/processed/
 Dataset/annotations/
+CrowdHuman Cropped/
 
 # Large pre-trained and trained YOLO weights
 *.pt
